@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Predicción de Precios</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+    />
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1 class="text-center">Predicción de Precio de Propiedades</h1>
+      <form id="prediction-form" class="mt-4">
+        <div class="mb-3">
+          <label for="sq_mt_built" class="form-label"
+            >Metros cuadrados de la vivienda (Mayor a 10 y menor a 1000)</label
+          >
+          <input
+            type="number"
+            class="form-control"
+            id="sq_mt_built"
+            min="11"
+            max="999"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="n_rooms" class="form-label">Número de habitaciones</label>
+          <input type="number" class="form-control" id="n_rooms" required />
+        </div>
+        <div class="mb-3">
+          <label for="n_bathrooms" class="form-label">Número de baños</label>
+          <input
+            type="number"
+            class="form-control"
+            id="n_bathrooms"
+            min="0"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="has_lift" class="form-label"
+            >¿Tiene ascensor? (1: Sí, 0: No)</label
+          >
+          <input
+            type="number"
+            class="form-control"
+            id="has_lift"
+            min="0"
+            max="1"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="has_parking" class="form-label"
+            >¿Tiene estacionamiento? (1: Sí, 0: No)</label
+          >
+          <input
+            type="number"
+            class="form-control"
+            id="has_parking"
+            min="0"
+            max="1"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="house_type_id" class="form-label"
+            >ID del tipo de propiedad :
+            <div>
+              <li>0: "Pisos"</li>
+              <li>1: "Casa o chalet"</li>
+              <li>2: "Dúplex"</li>
+              <li>3: "Áticos"</li>
+            </div>
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            id="house_type_id"
+            min="0"
+            max="3"
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn btn-primary mb-3">
+          Predecir Precio
+        </button>
+        <button type="button" class="btn btn-secondary mb-3" id="reset-form">
+          Limpiar Formulario
+        </button>
+      </form>
+
+      <div class="mt-4" id="result" style="display: none">
+        <h3>Precio Predicho: <span id="predicted-price"></span></h3>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById("prediction-form");
+      const resultDiv = document.getElementById("result");
+      const predictedPriceSpan = document.getElementById("predicted-price");
+      const resetButton = document.getElementById("reset-form");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const inputData = {
+          sq_mt_built: parseFloat(document.getElementById("sq_mt_built").value),
+          n_rooms: parseInt(document.getElementById("n_rooms").value),
+          n_bathrooms: parseInt(document.getElementById("n_bathrooms").value),
+          has_lift: parseInt(document.getElementById("has_lift").value),
+          has_parking: parseInt(document.getElementById("has_parking").value),
+          house_type_id: parseInt(
+            document.getElementById("house_type_id").value
+          ),
+        };
+
+        try {
+          const response = await fetch("/predict", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(inputData),
+          });
+
+          if (!response.ok) {
+            throw new Error("Error en la predicción");
+          }
+
+          const data = await response.json();
+          resultDiv.style.display = "block";
+          predictedPriceSpan.textContent = `$${data.predicted_price.toFixed(
+            2
+          )}`;
+        } catch (error) {
+          alert("Ocurrió un error: " + error.message);
+        }
+      });
+
+      resetButton.addEventListener("click", () => {
+        form.reset();
+        resultDiv.style.display = "none";
+      });
+    </script>
+  </body>
+</html>
